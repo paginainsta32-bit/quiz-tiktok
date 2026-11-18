@@ -1,0 +1,932 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>O Que É O Que É? | TikTok Live Quiz</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: #16092b;
+      color: #fff;
+      font-family: 'Fredoka', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      max-width: 600px;
+      background: radial-gradient(circle at 50% 35%, #7c4dff 0%, #5e35b1 55%, #311b92 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding-top: 52px;
+      padding-bottom: 140px;
+    }
+
+    /* Marca d'água de interrogações no fundo roxo */
+    .bg-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 3px, transparent 3px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Barra de status discreta no topo */
+    .status-bar {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 12px 6px;
+    }
+
+    .ws-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(18, 8, 38, 0.85);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .ws-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffab00;
+    }
+    .ws-dot.connected {
+      background: #00e676;
+      box-shadow: 0 0 10px #00e676;
+    }
+
+    .hud-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .hud-btn {
+      background: rgba(18, 8, 38, 0.85);
+      border: 2px solid #ffd54f;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Faixa Verde Superior Igual ao Print */
+    .green-banner {
+      position: relative;
+      z-index: 15;
+      background: linear-gradient(180deg, #00c853 0%, #009624 100%);
+      border-top: 4px solid #111;
+      border-bottom: 5px solid #111;
+      padding: 10px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.35);
+    }
+
+    .nerd-emoji {
+      font-size: 40px;
+      line-height: 1;
+      filter: drop-shadow(0 3px 0 #111);
+      animation: bounceEmoji 1.2s ease-in-out infinite alternate;
+      flex-shrink: 0;
+    }
+
+    @keyframes bounceEmoji {
+      0% { transform: translateY(0) rotate(-4deg); }
+      100% { transform: translateY(-4px) rotate(4deg); }
+    }
+
+    .banner-title {
+      font-size: clamp(20px, 5.8vw, 29px);
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      letter-spacing: 0.5px;
+      -webkit-text-stroke: 2px #111;
+      paint-order: stroke fill;
+      text-shadow: 0 3px 0 #111;
+      flex: 1;
+      padding: 0 4px;
+    }
+
+    /* Relógio Despertador no Canto Direito */
+    .alarm-clock {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      background: #fff;
+      border: 4px solid #e53935;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 0 #111, inset 0 0 0 3px #ffd54f;
+      flex-shrink: 0;
+    }
+
+    .alarm-clock::before,
+    .alarm-clock::after {
+      content: '';
+      position: absolute;
+      top: -8px;
+      width: 14px;
+      height: 9px;
+      background: #ffd54f;
+      border: 2.5px solid #111;
+      border-radius: 6px 6px 0 0;
+    }
+    .alarm-clock::before { left: 2px; transform: rotate(-28deg); }
+    .alarm-clock::after { right: 2px; transform: rotate(28deg); }
+
+    .timer-num {
+      font-size: 25px;
+      font-weight: 700;
+      color: #1565c0;
+      -webkit-text-stroke: 1px #111;
+      paint-order: stroke fill;
+    }
+
+    .timer-num.urgent {
+      color: #d50000;
+      animation: pulseUrgent 0.5s infinite alternate;
+    }
+
+    @keyframes pulseUrgent {
+      from { transform: scale(1); }
+      to { transform: scale(1.22); }
+    }
+
+    /* Ranking Top 3 Alunos */
+    .mvp-bar {
+      position: relative;
+      z-index: 15;
+      display: flex;
+      gap: 6px;
+      margin: 8px 12px 4px;
+    }
+
+    .mvp-card {
+      flex: 1;
+      background: rgba(20, 10, 45, 0.88);
+      border: 2.5px solid #ffd54f;
+      border-radius: 14px;
+      padding: 4px 7px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .mvp-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #ffd54f;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #5e35b1;
+    }
+
+    .mvp-info {
+      overflow: hidden;
+    }
+
+    .mvp-name {
+      font-size: 11px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mvp-pts {
+      font-size: 11px;
+      color: #ffd54f;
+    }
+
+    /* Quadro Branco da Pergunta */
+    .question-box {
+      position: relative;
+      z-index: 15;
+      margin: 6px 14px 10px;
+      background: #ffffff;
+      border: 4px solid #111111;
+      border-radius: 20px;
+      padding: 16px 14px;
+      min-height: 116px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 6px 0 #111111, 0 10px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .question-text {
+      font-size: clamp(22px, 6.2vw, 31px);
+      font-weight: 700;
+      color: #111111;
+      line-height: 1.2;
+    }
+
+    .cta-pill {
+      margin-top: 8px;
+      background: #ede7f6;
+      color: #4527a0;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 999px;
+      border: 1.5px solid #b39ddb;
+    }
+
+    /* Opções A, B, C */
+    .options-list {
+      position: relative;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 2px 16px;
+    }
+
+    .option-card {
+      position: relative;
+      background: #ffffff;
+      border: 4px solid #111111;
+      border-radius: 18px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px 0 10px;
+      box-shadow: 0 5px 0 #111111;
+      transition: transform 0.25s ease, background 0.25s ease;
+    }
+
+    .option-badge {
+      background: #ffca28;
+      color: #111;
+      border: 2.5px solid #111;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 2px 9px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .option-icon {
+      font-size: 38px;
+      line-height: 1;
+      margin-right: 10px;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+      flex-shrink: 0;
+    }
+
+    .option-label {
+      flex: 1;
+      font-size: clamp(21px, 5.8vw, 27px);
+      font-weight: 700;
+      color: #111111;
+      text-align: center;
+      padding-right: 24px;
+    }
+
+    .option-votes {
+      position: absolute;
+      right: 10px;
+      top: -10px;
+      background: #311b92;
+      color: #ffd54f;
+      border: 2px solid #111;
+      border-radius: 999px;
+      font-size: 11px;
+      padding: 1px 8px;
+      display: none;
+    }
+
+    .option-votes.has-votes {
+      display: block;
+    }
+
+    /* Destaque da Resposta Certa no Final */
+    .option-card.correct {
+      background: #00e676;
+      transform: scale(1.03);
+      box-shadow: 0 5px 0 #111, 0 0 25px #00e676;
+    }
+
+    .option-card.wrong {
+      opacity: 0.45;
+      background: #e0e0e0;
+    }
+
+    /* Feed discreto de palpites acima do chat */
+    .live-guesses {
+      position: relative;
+      z-index: 15;
+      margin: 10px 16px 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .guess-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(18, 8, 38, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 12px;
+      color: #fff;
+      animation: popChip 0.25s ease-out;
+    }
+
+    .guess-chip img {
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    @keyframes popChip {
+      from { transform: scale(0.75); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Banner de Resultado da Rodada */
+    #round-result {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: 52%;
+      transform: translateY(-50%);
+      z-index: 30;
+      background: rgba(18, 8, 38, 0.96);
+      border: 4px solid #ffd54f;
+      border-radius: 22px;
+      padding: 16px;
+      text-align: center;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
+    }
+
+    #round-result.show {
+      display: flex;
+      animation: popChip 0.3s ease-out;
+    }
+
+    .result-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 3px solid #00e676;
+      object-fit: cover;
+      margin: 6px 0;
+    }
+
+    /* Modal de Configuração */
+    #config-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      background: rgba(18, 8, 38, 0.97);
+      padding: 22px;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #config-modal.open {
+      display: flex;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      color: #ffd54f;
+      margin-bottom: 4px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      border: 2px solid #ffd54f;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: #00e676;
+      color: #111;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      padding: 11px;
+      border-radius: 12px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div class="bg-pattern"></div>
+
+    <!-- Barra de Conexão -->
+    <div class="status-bar">
+      <div class="ws-badge">
+        <span class="ws-dot" id="ws-dot"></span>
+        <span id="ws-status">CONECTANDO...</span>
+      </div>
+      <div class="hud-actions">
+        <button class="hud-btn" id="music-btn" onclick="toggleMusic()">🎵 Som: OFF</button>
+        <button class="hud-btn" onclick="toggleModal()">⚙️ Live</button>
+      </div>
+    </div>
+
+    <!-- Faixa Verde Superior Igual ao Print -->
+    <div class="green-banner">
+      <div class="nerd-emoji">🤓</div>
+      <div class="banner-title">O QUE É O QUE É?</div>
+      <div class="alarm-clock">
+        <span class="timer-num" id="timer-num">15</span>
+      </div>
+    </div>
+
+    <!-- Ranking Top 3 -->
+    <div class="mvp-bar">
+      <div class="mvp-card">
+        <img class="mvp-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Q1" alt="">
+        <div class="mvp-info">
+          <div class="mvp-name">1º Aguardando</div>
+          <div class="mvp-pts">0 ⭐</div>
+        </div>
+      </div>
+      <div class="mvp-card">
+        <img class="mvp-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Q2" alt="">
+        <div class="mvp-info">
+          <div class="mvp-name">2º Aguardando</div>
+          <div class="mvp-pts">0 ⭐</div>
+        </div>
+      </div>
+      <div class="mvp-card">
+        <img class="mvp-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Q3" alt="">
+        <div class="mvp-info">
+          <div class="mvp-name">3º Aguardando</div>
+          <div class="mvp-pts">0 ⭐</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quadro Branco da Pergunta -->
+    <div class="question-box">
+      <div class="question-text" id="question-text">Tem boca, mas não fala?</div>
+      <div class="cta-pill">💬 Comente A, B ou C no chat!</div>
+    </div>
+
+    <!-- 3 Opções -->
+    <div class="options-list">
+      <div class="option-card" id="opt-card-0">
+        <span class="option-badge">A</span>
+        <span class="option-icon" id="opt-icon-0">☎️</span>
+        <span class="option-label" id="opt-text-0">Telefone</span>
+        <span class="option-votes" id="opt-votes-0">0</span>
+      </div>
+      <div class="option-card" id="opt-card-1">
+        <span class="option-badge">B</span>
+        <span class="option-icon" id="opt-icon-1">🚗</span>
+        <span class="option-label" id="opt-text-1">Carro</span>
+        <span class="option-votes" id="opt-votes-1">0</span>
+      </div>
+      <div class="option-card" id="opt-card-2">
+        <span class="option-badge">C</span>
+        <span class="option-icon" id="opt-icon-2">🍳</span>
+        <span class="option-label" id="opt-text-2">Fogão</span>
+        <span class="option-votes" id="opt-votes-2">0</span>
+      </div>
+    </div>
+
+    <!-- Últimos palpites do chat -->
+    <div class="live-guesses" id="live-guesses"></div>
+
+    <!-- Card Rápido de Resultado -->
+    <div id="round-result">
+      <div style="background:#00e676; color:#111; padding:3px 14px; border-radius:999px; font-size:13px; font-weight:700;" id="res-badge">
+        ✅ RESPOSTA CERTA!
+      </div>
+      <img class="result-avatar" id="res-avatar" src="" alt="">
+      <div style="font-size:20px; color:#ffd54f;" id="res-winner">Primeiro a acertar: @Aluno</div>
+      <div style="font-size:24px; color:#fff; margin-top:4px;" id="res-answer">🍳 Fogão</div>
+    </div>
+
+    <!-- Modal Configurações -->
+    <div id="config-modal">
+      <h2 style="color: #ffd54f; text-align: center;">Configurar Live & Testes</h2>
+      <div class="input-group">
+        <label>URL WebSocket (Render):</label>
+        <input type="text" id="ws-url-input" placeholder="wss://ponte-tiktok-yfrh.onrender.com" />
+      </div>
+      <button class="btn-primary" onclick="saveAndConnect()">Salvar e Conectar</button>
+      <hr style="border-color: rgba(255,255,255,0.15);">
+      <button class="btn-secondary" id="sim-btn" onclick="toggleSimulation()">▶️ Simular Chat Jogando</button>
+      <button class="btn-secondary" onclick="nextQuestion()">⏭️ Próxima Charada</button>
+      <button class="btn-secondary" style="border-color: #ff5252; color: #ff8a80;" onclick="toggleModal()">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    const RIDDLES = [
+      { q: "Tem boca, mas não fala?", opts: [{ icon: "☎️", text: "Telefone" }, { icon: "🚗", text: "Carro" }, { icon: "🍳", text: "Fogão" }], ans: 2 },
+      { q: "Tem dentes, mas não morde?", opts: [{ icon: "🪮", text: "Pente" }, { icon: "🐊", text: "Jacaré" }, { icon: "🍴", text: "Garfo" }], ans: 0 },
+      { q: "Cai em pé e corre deitado?", opts: [{ icon: "🏃", text: "Atleta" }, { icon: "🌧️", text: "Chuva" }, { icon: "⚽", text: "Bola" }], ans: 1 },
+      { q: "Quanto mais se tira, maior fica?", opts: [{ icon: "🕳️", text: "Buraco" }, { icon: "🍰", text: "Bolo" }, { icon: "💰", text: "Dinheiro" }], ans: 0 },
+      { q: "Tem cabeça e tem dente, não é bicho e nem é gente?", opts: [{ icon: "🧄", text: "Alho" }, { icon: "🦁", text: "Leão" }, { icon: "🪥", text: "Escova" }], ans: 0 },
+      { q: "Anda com os pés na cabeça?", opts: [{ icon: "🐒", text: "Macaco" }, { icon: "🪲", text: "Piolho" }, { icon: "🤡", text: "Palhaço" }], ans: 1 },
+      { q: "Tem coroa, mas não é rei?", opts: [{ icon: "🍍", text: "Abacaxi" }, { icon: "👑", text: "Príncipe" }, { icon: "🦁", text: "Leão" }], ans: 0 },
+      { q: "Sobe quando a chuva desce?", opts: [{ icon: "🎈", text: "Balão" }, { icon: "☂️", text: "Guarda-chuva" }, { icon: "✈️", text: "Avião" }], ans: 1 },
+      { q: "Tem asa, mas não voa?", opts: [{ icon: "🦅", text: "Águia" }, { icon: "☕", text: "Xícara" }, { icon: "🦋", text: "Borboleta" }], ans: 1 },
+      { q: "Fica cheio de boca para baixo e vazio de boca para cima?", opts: [{ icon: "🎩", text: "Chapéu" }, { icon: "🥤", text: "Copo" }, { icon: "🥣", text: "Tigela" }], ans: 0 },
+      { q: "Tem pernas, mas não anda?", opts: [{ icon: "🪑", text: "Cadeira" }, { icon: "🐕", text: "Cachorro" }, { icon: "🐎", text: "Cavalo" }], ans: 0 },
+      { q: "Tem pescoço e não tem cabeça?", opts: [{ icon: "🦒", text: "Girafa" }, { icon: "🍾", text: "Garrafa" }, { icon: "👕", text: "Camisa" }], ans: 1 },
+      { q: "Nasce grande e morre pequeno?", opts: [{ icon: "✏️", text: "Lápis" }, { icon: "🌳", text: "Árvore" }, { icon: "🐘", text: "Elefante" }], ans: 0 },
+      { q: "Passa na água e não se molha?", opts: [{ icon: "🐟", text: "Peixe" }, { icon: "👤", text: "Sombra" }, { icon: "🚤", text: "Barco" }], ans: 1 },
+      { q: "Tem olhos, mas não vê?", opts: [{ icon: "🥔", text: "Batata" }, { icon: "🦉", text: "Coruja" }, { icon: "👓", text: "Óculos" }], ans: 0 },
+      { q: "Corre a casa toda e depois vai dormir num canto?", opts: [{ icon: "🐈", text: "Gato" }, { icon: "🧹", text: "Vassoura" }, { icon: "🤖", text: "Robô" }], ans: 1 },
+      { q: "Tem capa, mas não é super-herói?", opts: [{ icon: "🦇", text: "Batman" }, { icon: "📕", text: "Livro" }, { icon: "🧥", text: "Casaco" }], ans: 1 },
+      { q: "Quanto mais seca, mais molhada fica?", opts: [{ icon: "🧽", text: "Esponja" }, { icon: "🏖️", text: "Areia" }, { icon: "🧣", text: "Toalha" }], ans: 2 },
+      { q: "Tem chaves, mas não abre portas?", opts: [{ icon: "🎹", text: "Piano" }, { icon: "🔐", text: "Cadeado" }, { icon: "🧰", text: "Caixa" }], ans: 0 },
+      { q: "Quebra assim que se fala o nome dela?", opts: [{ icon: "🥛", text: "Vidro" }, { icon: "🤫", text: "Silêncio" }, { icon: "🥚", text: "Ovo" }], ans: 1 },
+      { q: "Tem cama, mas nunca dorme?", opts: [{ icon: "🌊", text: "Rio" }, { icon: "🛏️", text: "Quarto" }, { icon: "😴", text: "Bebê" }], ans: 0 },
+      { q: "Voa sem ter asas e chora sem ter olhos?", opts: [{ icon: "🐦", text: "Pássaro" }, { icon: "☁️", text: "Nuvem" }, { icon: "🪁", text: "Pipa" }], ans: 1 },
+      { q: "Tem agulhas, mas não sabe costurar?", opts: [{ icon: "🌲", text: "Pinheiro" }, { icon: "🧵", text: "Linha" }, { icon: "🩺", text: "Seringa" }], ans: 0 },
+      { q: "Entra na água e não se molha?", opts: [{ icon: "🦆", text: "Pato" }, { icon: "🪞", text: "Reflexo" }, { icon: "🤿", text: "Mergulhador" }], ans: 1 },
+      { q: "É feito para andar, mas não anda?", opts: [{ icon: "👟", text: "Sapato" }, { icon: "🛣️", text: "Rua" }, { icon: "🚲", text: "Bicicleta" }], ans: 1 },
+      { q: "Tem 4 dedos e 1 polegar, mas não está vivo?", opts: [{ icon: "🧤", text: "Luva" }, { icon: "🤖", text: "Robô" }, { icon: "🗿", text: "Estátua" }], ans: 0 },
+      { q: "Sobe, sobe, sobe e nunca desce?", opts: [{ icon: "🚀", text: "Foguete" }, { icon: "🎂", text: "Idade" }, { icon: "🎈", text: "Balão" }], ans: 1 },
+      { q: "Tem cidades, mas não tem casas?", opts: [{ icon: "🗺️", text: "Mapa" }, { icon: "🌍", text: "Planeta" }, { icon: "🏙️", text: "Estado" }], ans: 0 },
+      { q: "O que é que quanto mais se tira, mais a gente tem?", opts: [{ icon: "📸", text: "Fotografia" }, { icon: "🍫", text: "Chocolate" }, { icon: "💵", text: "Nota" }], ans: 0 },
+      { q: "Tem barriga atrás?", opts: [{ icon: "🦵", text: "Perna" }, { icon: "🤰", text: "Barriga" }, { icon: "🎒", text: "Mochila" }], ans: 0 }
+    ];
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+    shuffle(RIDDLES);
+
+    let currentIdx = 0;
+    let timeLeft = 15;
+    let timerInterval = null;
+    let roundActive = true;
+    let userAnswers = new Map(); // uniqueId -> choiceIndex
+    let firstWinner = null;
+    let leaderboard = {};
+    let ws = null;
+    let simInterval = null;
+
+    const defaultAvatars = [
+      'https://api.dicebear.com/7.x/avataaars/svg?seed=Ana',
+      'https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro',
+      'https://api.dicebear.com/7.x/avataaars/svg?seed=Carla',
+      'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas'
+    ];
+
+    // Áudio
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    let musicOn = false;
+    let musicTimer = null;
+    let step = 0;
+    const notes = [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25];
+
+    function toggleMusic() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const btn = document.getElementById('music-btn');
+      if (!musicOn) {
+        musicOn = true;
+        btn.textContent = '🎵 Som: ON';
+        btn.style.background = '#009624';
+        musicTimer = setInterval(() => {
+          playTone(notes[step % notes.length], 0.2, 0.035, 'triangle');
+          step++;
+        }, 420);
+      } else {
+        musicOn = false;
+        clearInterval(musicTimer);
+        btn.textContent = '🎵 Som: OFF';
+        btn.style.background = '';
+      }
+    }
+
+    function playTone(freq, dur = 0.22, vol = 0.07, type = 'sine') {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(vol, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + dur);
+    }
+
+    function normalize(str) {
+      return str
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function startQuestion() {
+      roundActive = true;
+      userAnswers.clear();
+      firstWinner = null;
+      timeLeft = 15;
+
+      document.getElementById('round-result').classList.remove('show');
+      document.getElementById('live-guesses').innerHTML = '';
+
+      const timerEl = document.getElementById('timer-num');
+      timerEl.textContent = timeLeft;
+      timerEl.classList.remove('urgent');
+
+      const item = RIDDLES[currentIdx];
+      document.getElementById('question-text').textContent = item.q;
+
+      item.opts.forEach((opt, i) => {
+        const card = document.getElementById(`opt-card-${i}`);
+        card.className = 'option-card';
+        document.getElementById(`opt-icon-${i}`).textContent = opt.icon;
+        document.getElementById(`opt-text-${i}`).textContent = opt.text;
+        const v = document.getElementById(`opt-votes-${i}`);
+        v.textContent = '0';
+        v.classList.remove('has-votes');
+      });
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+
+        if (timeLeft <= 5 && timeLeft > 0) {
+          timerEl.classList.add('urgent');
+          playTone(880, 0.12, 0.06);
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          revealAnswer();
+        }
+      }, 1000);
+    }
+
+    function updateVoteCounts() {
+      const counts = [0, 0, 0];
+      userAnswers.forEach((choice) => {
+        if (counts[choice] !== undefined) counts[choice]++;
+      });
+      counts.forEach((c, i) => {
+        const el = document.getElementById(`opt-votes-${i}`);
+        el.textContent = `${c} 💬`;
+        if (c > 0) el.classList.add('has-votes');
+      });
+    }
+
+    function addGuessChip(name, avatar, choiceLetter) {
+      const box = document.getElementById('live-guesses');
+      const chip = document.createElement('div');
+      chip.className = 'guess-chip';
+      chip.innerHTML = `<img src="${avatar}" onerror="this.src='${defaultAvatars[0]}'"><span><b>${name}:</b> ${choiceLetter}</span>`;
+      box.appendChild(chip);
+      if (box.children.length > 4) box.removeChild(box.firstChild);
+    }
+
+    function addPoints(userKey, name, avatar, pts) {
+      if (!leaderboard[userKey]) leaderboard[userKey] = { name, avatar, pts: 0 };
+      leaderboard[userKey].pts += pts;
+
+      const sorted = Object.values(leaderboard).sort((a, b) => b.pts - a.pts).slice(0, 3);
+      const cards = document.querySelectorAll('.mvp-card');
+      sorted.forEach((u, i) => {
+        if (cards[i]) {
+          cards[i].querySelector('img').src = u.avatar;
+          cards[i].querySelector('.mvp-name').textContent = `${i + 1}º ${u.name}`;
+          cards[i].querySelector('.mvp-pts').textContent = `${u.pts} ⭐`;
+        }
+      });
+    }
+
+    function processComment(userKey, name, avatar, rawText) {
+      if (!roundActive) return;
+      const clean = normalize(rawText);
+      if (!clean) return;
+
+      const item = RIDDLES[currentIdx];
+      let chosen = -1;
+
+      if (clean === 'A' || clean === '1' || clean.startsWith('A ') || clean === normalize(item.opts[0].text)) chosen = 0;
+      else if (clean === 'B' || clean === '2' || clean.startsWith('B ') || clean === normalize(item.opts[1].text)) chosen = 1;
+      else if (clean === 'C' || clean === '3' || clean.startsWith('C ') || clean === normalize(item.opts[2].text)) chosen = 2;
+
+      if (chosen === -1) return;
+
+      // Só conta o primeiro palpite de cada pessoa na rodada
+      if (userAnswers.has(userKey)) return;
+      userAnswers.set(userKey, chosen);
+
+      const letters = ['A', 'B', 'C'];
+      addGuessChip(name, avatar, letters[chosen]);
+      updateVoteCounts();
+
+      if (chosen === item.ans) {
+        if (!firstWinner) {
+          firstWinner = { name, avatar };
+          addPoints(userKey, name, avatar, 10);
+        } else {
+          addPoints(userKey, name, avatar, 5);
+        }
+      }
+    }
+
+    function revealAnswer() {
+      roundActive = false;
+      const item = RIDDLES[currentIdx];
+
+      item.opts.forEach((_, i) => {
+        const card = document.getElementById(`opt-card-${i}`);
+        if (i === item.ans) card.classList.add('correct');
+        else card.classList.add('wrong');
+      });
+
+      playTone(523.25, 0.14, 0.09);
+      setTimeout(() => playTone(659.25, 0.14, 0.09), 130);
+      setTimeout(() => playTone(783.99, 0.35, 0.09), 260);
+
+      const resBox = document.getElementById('round-result');
+      const resAvatar = document.getElementById('res-avatar');
+      const resWinner = document.getElementById('res-winner');
+      const resAnswer = document.getElementById('res-answer');
+
+      resAnswer.textContent = `${item.opts[item.ans].icon} ${item.opts[item.ans].text}`;
+
+      if (firstWinner) {
+        resAvatar.src = firstWinner.avatar;
+        resAvatar.style.display = 'block';
+        resWinner.textContent = `🏆 Mais rápido: ${firstWinner.name} (+10⭐)`;
+      } else {
+        resAvatar.style.display = 'none';
+        resWinner.textContent = 'Ninguém acertou a tempo! 😱';
+      }
+
+      resBox.classList.add('show');
+
+      setTimeout(() => {
+        currentIdx = (currentIdx + 1) % RIDDLES.length;
+        if (currentIdx === 0) shuffle(RIDDLES);
+        startQuestion();
+      }, 3800);
+    }
+
+    function nextQuestion() {
+      clearInterval(timerInterval);
+      currentIdx = (currentIdx + 1) % RIDDLES.length;
+      startQuestion();
+      toggleModal();
+    }
+
+    // Conexão WebSocket com a Ponte Render (mesma da Forca!)
+    function connectWebSocket(url) {
+      if (!url) return;
+      if (ws) ws.close();
+      const dot = document.getElementById('ws-dot');
+      const status = document.getElementById('ws-status');
+      status.textContent = 'CONECTANDO...';
+
+      try {
+        ws = new WebSocket(url);
+        ws.onopen = () => {
+          dot.classList.add('connected');
+          status.textContent = 'AO VIVO';
+        };
+        ws.onclose = () => {
+          dot.classList.remove('connected');
+          status.textContent = 'OFFLINE';
+          setTimeout(() => connectWebSocket(url), 5000);
+        };
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            const ev = msg.event || msg.type;
+            const data = msg.data || msg;
+            const userKey = data.uniqueId || data.nickname || 'user';
+            const name = data.nickname || data.uniqueId || 'Aluno';
+            const avatar = data.profilePictureUrl || defaultAvatars[0];
+
+            if (ev === 'chat' && data.comment) {
+              processComment(userKey, name, avatar, data.comment);
+            }
+          } catch (e) {}
+        };
+      } catch (e) {
+        status.textContent = 'ERRO URL';
+      }
+    }
+
+    function toggleModal() {
+      document.getElementById('config-modal').classList.toggle('open');
+    }
+
+    function saveAndConnect() {
+      const url = document.getElementById('ws-url-input').value.trim();
+      localStorage.setItem('tiktok_ws_url', url);
+      connectWebSocket(url);
+      toggleModal();
+    }
+
+    function toggleSimulation() {
+      const btn = document.getElementById('sim-btn');
+      if (simInterval) {
+        clearInterval(simInterval);
+        simInterval = null;
+        btn.textContent = '▶️ Simular Chat Jogando';
+      } else {
+        btn.textContent = '⏸️ Pausar Simulação';
+        const choices = ['A', 'B', 'C'];
+        simInterval = setInterval(() => {
+          if (!roundActive) return;
+          const idx = Math.floor(Math.random() * 20);
+          const names = ["Ana", "Pedro", "Lucas", "Mariana", "João", "Bia", "Rafael", "Clara"];
+          const name = names[idx % names.length] + idx;
+          const avatar = defaultAvatars[idx % defaultAvatars.length];
+          const pick = choices[Math.floor(Math.random() * choices.length)];
+          processComment(name, name, avatar, pick);
+        }, 1100);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      startQuestion();
+      const defaultUrl = 'wss://ponte-tiktok-yfrh.onrender.com';
+      const savedUrl = localStorage.getItem('tiktok_ws_url') || defaultUrl;
+      document.getElementById('ws-url-input').value = savedUrl;
+      connectWebSocket(savedUrl);
+    });
+  </script>
+</body>
+</html>
