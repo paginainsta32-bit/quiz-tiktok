@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -630,11 +630,14 @@
     let timeLeft = 15;
     let timerInterval = null;
     let roundActive = true;
-    let userAnswers = new Map(); // uniqueId -> choiceIndex
+    let userAnswers = new Map();
     let firstWinner = null;
     let leaderboard = {};
     let ws = null;
     let simInterval = null;
+    let keepAliveTimer = null;
+    let reconnectTimer = null;
+    let currentWsUrl = '';
 
     const defaultAvatars = [
       'https://api.dicebear.com/7.x/avataaars/svg?seed=Ana',
@@ -850,29 +853,54 @@
       toggleModal();
     }
 
-    // Conexão WebSocket com a Ponte Render (mesma da Forca!)
+    // Conexão WebSocket com a Ponte Render + Keep-Alive e Reconexão Automática
     function connectWebSocket(url) {
       if (!url) return;
-      if (ws) ws.close();
+      currentWsUrl = url;
+      clearTimeout(reconnectTimer);
+      clearInterval(keepAliveTimer);
+
+      if (ws) {
+        ws.onclose = null;
+        ws.onerror = null;
+        try { ws.close(); } catch (e) {}
+      }
+
       const dot = document.getElementById('ws-dot');
       const status = document.getElementById('ws-status');
       status.textContent = 'CONECTANDO...';
 
       try {
         ws = new WebSocket(url);
+
         ws.onopen = () => {
           dot.classList.add('connected');
           status.textContent = 'AO VIVO';
+
+          keepAliveTimer = setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send('ping');
+            }
+          }, 7000);
         };
+
         ws.onclose = () => {
+          clearInterval(keepAliveTimer);
           dot.classList.remove('connected');
-          status.textContent = 'OFFLINE';
-          setTimeout(() => connectWebSocket(url), 5000);
+          status.textContent = 'RECONECTANDO...';
+          reconnectTimer = setTimeout(() => connectWebSocket(currentWsUrl), 1500);
         };
+
+        ws.onerror = () => {
+          try { ws.close(); } catch (e) {}
+        };
+
         ws.onmessage = (event) => {
           try {
             const msg = JSON.parse(event.data);
             const ev = msg.event || msg.type;
+            if (ev === 'heartbeat' || ev === 'pong' || ev === 'status') return;
+
             const data = msg.data || msg;
             const userKey = data.uniqueId || data.nickname || 'user';
             const name = data.nickname || data.uniqueId || 'Aluno';
@@ -885,8 +913,17 @@
         };
       } catch (e) {
         status.textContent = 'ERRO URL';
+        reconnectTimer = setTimeout(() => connectWebSocket(currentWsUrl), 2000);
       }
     }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && currentWsUrl) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          connectWebSocket(currentWsUrl);
+        }
+      }
+    });
 
     function toggleModal() {
       document.getElementById('config-modal').classList.toggle('open');
